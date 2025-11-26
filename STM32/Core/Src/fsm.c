@@ -17,77 +17,46 @@ void main_fsm(void) {
 }
 
 void command_parser_fsm() {
-	int index;
-	if (index_buffer == 0) {
-		index = MAX_BUFFER_SIZE - 1;
-	}
-	else {
-		index = index_buffer - 1;
-	}
+    int idx = (index_buffer == 0) ? MAX_BUFFER_SIZE - 1 : index_buffer - 1;
+    char c = buffer[idx];
 
-	if (RST == 1) {
-		switch(parser_mode) {
-		case INIT:
-			if (buffer[index] == '!') parser_mode = RST_BEGIN;
-			else parser_mode = INIT;
-			break;
-		case RST_BEGIN:
-			if (buffer[index] == 'R') parser_mode = RST_R;
-			else parser_mode = INIT;
-			break;
-		case RST_R:
-			if (buffer[index] == 'S') parser_mode = RST_S;
-			else parser_mode = INIT;
-			break;
-		case RST_S:
-			if (buffer[index] == 'T') parser_mode = RST_T;
-			else parser_mode = INIT;
-			break;
-		case RST_T:
-			if (buffer[index] == '#') {
-				RST = 0;
-				OK = 1;
-				parser_mode = INIT;
-				message_mode = SEND;
-				value_flag = 1;
-			}
-			else parser_mode = INIT;
-			break;
-		default:
-			parser_mode = INIT;
-			break;
-		}
-	}
+    if (c == '!') {
+        command_flag = 0;
+        parser_mode = 0;
+        memset(command_data, 0, MAX_BUFFER_SIZE);
+        return;
+    }
 
-	if (OK == 1) {
-		switch (parser_mode) {
-		case INIT:
-			if (buffer[index] == '!') parser_mode = OK_BEGIN;
-			else parser_mode = INIT;
-			break;
-		case OK_BEGIN:
-			if (buffer[index] == 'O') parser_mode = OK_O;
-			else parser_mode = INIT;
-			break;
-		case OK_O:
-			if (buffer[index] == 'K') parser_mode = OK_K;
-			else parser_mode = INIT;
-			break;
-		case OK_K:
-			if (buffer[index] == '#') {
-				message_mode = INIT;
-				parser_mode = INIT;
-				RST = 1;
-				OK = 0;
-			}
-			else parser_mode = INIT;
-			break;
-		default:
-			parser_mode = INIT;
-			break;
-		}
-	}
+    if (command_flag == 1) return;
+
+    if (c == '#') {
+        command_flag = 1;
+        command_data[parser_mode] = 0;
+
+        process_command((char *)command_data);
+        return;
+    }
+
+    if (parser_mode < MAX_BUFFER_SIZE - 1) {
+        command_data[parser_mode++] = c;
+    }
 }
+
+void process_command(char *cmd) {
+    if (strcmp(cmd, "RST") == 0) {
+        RST = 0;
+        OK = 1;
+        value_flag = 1;
+        message_mode = SEND;
+    }
+
+    else if (strcmp(cmd, "OK") == 0) {
+        message_mode = INIT;
+        RST = 1;
+        OK = 0;
+    }
+}
+
 
 void uart_communication_fsm(void) {
 	switch (message_mode) {

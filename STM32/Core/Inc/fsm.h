@@ -19,6 +19,7 @@ UART_HandleTypeDef huart2;
 
 void main_fsm(void);
 void command_parser_fsm();
+void process_command(char *cmd);
 void uart_communication_fsm(void);
 
 #endif /* INC_FSM_H_ */

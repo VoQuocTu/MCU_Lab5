@@ -1,3 +1,4 @@
 fsm.c:11:6:main_fsm	8	static
 fsm.c:19:6:command_parser_fsm	16	static
-fsm.c:92:6:uart_communication_fsm	8	static
+fsm.c:49:6:process_command	16	static
+fsm.c:66:6:uart_communication_fsm	8	static
